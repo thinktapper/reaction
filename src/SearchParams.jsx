@@ -1,22 +1,18 @@
-import { useState, useContext } from 'react'
+import { useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
 import { useQuery } from '@tanstack/react-query'
 import Results from './Results'
 import useBreedList from './useBreedList'
 import fetchSearch from './fetchSearch'
-import AdoptedPetContext from './AdoptedPetContext'
-import { Animal } from './APIResponseTypes'
-
-const ANIMALS: Animal[] = ['bird', 'cat', 'dog', 'rabbit', 'reptile']
+import { all } from './searchParamsSlice'
+const ANIMALS = ['bird', 'cat', 'dog', 'rabbit', 'reptile']
 
 const SearchParams = () => {
-  const [requestParams, setRequestParams] = useState({
-    location: '',
-    animal: '' as Animal,
-    breed: '',
-  })
-  const [animal, setAnimal] = useState('' as Animal)
+  const adoptedPet = useSelector(state => state.adoptedPet.value)
+  const requestParams = useSelector(state => state.searchParams.value)
+  const [animal, setAnimal] = useState('')
   const [breeds] = useBreedList(animal)
-  const [adoptedPet] = useContext(AdoptedPetContext)
+  const dispatch = useDispatch()
 
   const results = useQuery(['search', requestParams], fetchSearch)
   const pets = results?.data?.pets ?? []
@@ -26,14 +22,13 @@ const SearchParams = () => {
       <form
         onSubmit={e => {
           e.preventDefault()
-          const formData = new FormData(e.currentTarget)
+          const formData = new FormData(e.target)
           const obj = {
-            animal:
-              (formData.get('animal')?.toString() as Animal) ?? ('' as Animal),
-            breed: formData.get('breed')?.toString() ?? '',
-            location: formData.get('location')?.toString() ?? '',
+            animal: formData.get('animal') ?? '',
+            breed: formData.get('breed') ?? '',
+            location: formData.get('location') ?? '',
           }
-          setRequestParams(obj)
+          dispatch(all(obj))
         }}>
         {adoptedPet ? (
           <div className="pet image-container">
@@ -49,29 +44,34 @@ const SearchParams = () => {
           Animal
           <select
             id="animal"
-            value={animal}
+            name="animal"
             onChange={e => {
-              setAnimal(e.target.value as Animal)
+              setAnimal(e.target.value)
             }}
             onBlur={e => {
-              setAnimal(e.target.value as Animal)
+              setAnimal(e.target.value)
             }}>
             <option />
             {ANIMALS.map(animal => (
-              <option key={animal}>{animal}</option>
+              <option key={animal} value={animal}>
+                {animal}
+              </option>
             ))}
           </select>
         </label>
 
         <label htmlFor="breed">
           Breed
-          <select id="breed" name="breed" disabled={breeds.length === 0}>
+          <select disabled={!breeds.length} id="breed" name="breed">
             <option />
             {breeds.map(breed => (
-              <option key={breed}>{breed}</option>
+              <option key={breed} value={breed}>
+                {breed}
+              </option>
             ))}
           </select>
         </label>
+
         <button>Submit</button>
       </form>
       <Results pets={pets} />
