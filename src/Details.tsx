@@ -6,7 +6,6 @@ import Carousel from './Carousel'
 import ErrorBoundary from './ErrorBoundary'
 import Modal from './Modal'
 import AdoptedPetContext from './AdoptedPetContext'
-import { PetAPIResponse } from './APIResponseTypes'
 
 const Details = () => {
   const [showModal, setShowModal] = useState(false)
@@ -19,7 +18,7 @@ const Details = () => {
   if (!id) {
     throw new Error('I want an id. I have no id.')
   }
-  const results = useQuery<PetAPIResponse>(['details', id], fetchPet)
+  const results = useQuery(['details', id], fetchPet)
 
   if (results.isLoading) {
     return (
